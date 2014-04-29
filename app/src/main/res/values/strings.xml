@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Muzei GoPro POTD</string>
+    <string name="source_name">GoPro POTD</string>
+    <string name="source_description">GoPro Photo Of The Day</string>
+</resources>
