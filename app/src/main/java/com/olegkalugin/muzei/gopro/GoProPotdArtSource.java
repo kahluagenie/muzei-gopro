@@ -7,7 +7,6 @@ import com.google.android.apps.muzei.api.Artwork;
 import com.google.android.apps.muzei.api.MuzeiArtSource;
 
 public class GoProPotdArtSource extends MuzeiArtSource {
-
     private static final String TAG = "GoProPOTD";
     private static final String SOURCE_NAME = "GoProPotdArtSource";
 
@@ -26,13 +25,14 @@ public class GoProPotdArtSource extends MuzeiArtSource {
     @Override
     protected void onUpdate(int reason) {
         GoProService goProService = new GoProService();
+        GoProService.Photo photo = goProService.getPhoto();
 
         publishArtwork(new Artwork.Builder()
-                .title("GoPro title")
-                .byline("GoPro byline")
-                .imageUri(goProService.getPhotoUrl())
+                .title(photo.title)
+                .byline(photo.byline)
+                .imageUri(photo.uri)
                 .token("goprotoken")
-                .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse("http://gopro.com/channel")))
+                .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(GoProService.WEBPAGE_URL)))
                 .build());
 
         scheduleUpdate(System.currentTimeMillis() + ROTATE_TIME_MILLIS);

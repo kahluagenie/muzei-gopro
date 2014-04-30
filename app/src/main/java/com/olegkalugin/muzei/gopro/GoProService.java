@@ -2,63 +2,65 @@ package com.olegkalugin.muzei.gopro;
 
 import android.net.Uri;
 
-import java.io.BufferedReader;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class GoProService {
+    public static final String WEBPAGE_URL = "http://gopro.com/photos/photo-of-the-day";
 
-    public Uri getPhotoUrl() {
-        StringBuilder webPage = new StringBuilder();
+    public Photo getPhoto() {
+        Document document;
         try {
-            webPage = fetchWebPage(new URL("http://gopro.com/photos/photo-of-the-day"));
-        } catch (MalformedURLException e) {
+            document = Jsoup.connect(WEBPAGE_URL).get();
+        } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
 
-        String prefix = "span12 text-center black-background'><img src='";
-        String postfix = "'></div>";
-        Pattern pattern = Pattern.compile(prefix + "(.*?)" + postfix, Pattern.DOTALL);
-        Matcher matcher = pattern.matcher(webPage);
-        String photoUrl = "";
-        if (matcher.find()) {
-            photoUrl = matcher.group();
-            photoUrl = photoUrl.replace(prefix, "");
-            photoUrl = photoUrl.replace(postfix, "");
-        }
+        Photo photo = new Photo();
+        photo.uri = getPhotoUri(document);
+        photo.title = getPhotoTitle(document);
+        photo.byline = getPhotoByline(document);
 
-        return Uri.parse(photoUrl);
+        return photo;
     }
 
-    private StringBuilder fetchWebPage(URL url) {
-        InputStream is = null;
-        BufferedReader br;
-        String line;
-        StringBuilder result = new StringBuilder();
+    private Uri getPhotoUri(Document document) {
+        Uri uri = null;
+        Elements elements = document.select("div.span12.text-center.black-background");
+        if (!elements.isEmpty()) {
+            Element div = elements.first();
+            Element img = div.select("img").first();
+            uri = Uri.parse(img.attr("src"));
+        }
+        return uri;
+    }
 
-        try {
-            is = url.openStream();
-            br = new BufferedReader(new InputStreamReader(is));
+    private String getPhotoTitle(Document document) {
+        String title = document.title();
+        title = title.replace("GoPro Photo Of The Day | ", "");
+        return title;
+    }
 
-            while ((line = br.readLine()) != null) {
-                result.append(line);
-            }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } finally {
-            try {
-                if (is != null) is.close();
-            } catch (IOException ioe) {
-                // nothing to see here
-            }
+    private String getPhotoByline(Document document) {
+        String byline = "";
+        Elements elements = document.select("p.gray-font.medium-bottom-margin");
+        if (!elements.isEmpty()) {
+            Element p = elements.first();
+            byline = p.text();
         }
 
-        return result;
+        return byline;
+    }
+
+    public class Photo {
+        Uri uri;
+        String title;
+        String byline;
     }
 
 }
