@@ -12,7 +12,7 @@ import com.google.android.apps.muzei.api.RemoteMuzeiArtSource;
 import com.google.android.apps.muzei.api.UserCommand;
 
 import java.util.Calendar;
-import java.util.Date;
+import java.util.TimeZone;
 
 public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     private static final String TAG = "GoProPOTD";
@@ -26,8 +26,9 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     @Override
     public void onCreate() {
         super.onCreate();
-        UserCommand shareCommand = new UserCommand(CUSTOM_COMMAND_ID_SHARE, "Share");
-        setUserCommands(shareCommand);
+        UserCommand nextArtworkCommand = new UserCommand(BUILTIN_COMMAND_ID_NEXT_ARTWORK);
+        UserCommand shareCommand = new UserCommand(CUSTOM_COMMAND_ID_SHARE, "Share photo");
+        setUserCommands(nextArtworkCommand, shareCommand);
     }
 
     @Override
@@ -39,40 +40,64 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
             throw new RetryException();
         }
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());
-        // token as year/month/day. MONTH is zero-based, so increase by 1
-        String token = calendar.get(Calendar.YEAR)
+        if (!photo.uri.equals(getCurrentArtwork().getImageUri())) {
+            String token = createToken();
+            publishArtwork(new Artwork.Builder()
+                    .title(photo.title)
+                    .byline(photo.byline)
+                    .imageUri(photo.uri)
+                    .token(token)
+                    .viewIntent(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse(GoProService.WEBPAGE_URL + "/" + token)))
+                    .build());
+        }
+
+        scheduleUpdate(calculateNextUpdateTime());
+    }
+
+    /**
+     * Create a token as "year/month/day". MONTH is zero-based, so increase by 1.
+     * Use previous day if it's before 10 am PDT, since it's yesterday's photo.
+     * It will also serve us as a URL appender to access previous photos.
+     *
+     * @return token for the photo
+     */
+    private String createToken() {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
+        if (calendar.get(Calendar.HOUR_OF_DAY) < 10) {
+            calendar.add(Calendar.DAY_OF_MONTH, -1);
+        }
+
+        return calendar.get(Calendar.YEAR)
                 + "/" + String.valueOf(calendar.get(Calendar.MONTH) + 1)
                 + "/" + calendar.get(Calendar.DAY_OF_MONTH);
+    }
 
-        publishArtwork(new Artwork.Builder()
-                .title(photo.title)
-                .byline(photo.byline)
-                .imageUri(photo.uri)
-                .token(token)
-                .viewIntent(new Intent(Intent.ACTION_VIEW,
-                        Uri.parse(GoProService.WEBPAGE_URL + "/" + token)))
-                .build());
-
-        /*
-            GoPro seems to update the photo at 10 am every day.
-            We'll schedule updates at 10 am and 10 pm just in case
-            they delay it for some reason.
-            TODO: take care of time zones. This is in PDT.
-         */
+    /**
+     * GoPro seems to update the photo at 10 am PDT every day.
+     * We'll schedule updates at 10:15 am and 10 pm just in case they delay it for some reason.
+     *
+     * @return next update time in milliseconds
+     */
+    private long calculateNextUpdateTime() {
+        // Do all date manipulations in PDT
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
         int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+
         if (hourOfDay >= 10 && hourOfDay < 22) {
             calendar.set(Calendar.HOUR_OF_DAY, 22);
+            calendar.set(Calendar.MINUTE, 0);
         } else {
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
+            if (hourOfDay >= 22) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1);
+            }
             calendar.set(Calendar.HOUR_OF_DAY, 10);
+            calendar.set(Calendar.MINUTE, 15);
         }
-        calendar.set(Calendar.MINUTE, 0);
+
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
-
-        scheduleUpdate(calendar.getTimeInMillis());
+        return calendar.getTimeInMillis();
     }
 
     @Override
