@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.olegkalugin.muzei.gopro">
+    package="com.olegkalugin.android.muzei.gopro">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -11,7 +11,7 @@
         android:icon="@drawable/ic_launcher">
 
         <service
-            android:name=".GoProPotdArtSource"
+            android:name="com.olegkalugin.android.muzei.gopro.GoProPotdArtSource"
             android:label="@string/source_name"
             android:description="@string/source_description"
             android:icon="@drawable/ic_source_gopro">

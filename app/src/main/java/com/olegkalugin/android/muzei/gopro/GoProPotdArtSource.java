@@ -1,4 +1,4 @@
-package com.olegkalugin.muzei.gopro;
+package com.olegkalugin.android.muzei.gopro;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -40,7 +40,7 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
             throw new RetryException();
         }
 
-        if (!photo.uri.equals(getCurrentArtwork().getImageUri())) {
+        if (getCurrentArtwork() == null || !photo.uri.equals(getCurrentArtwork().getImageUri())) {
             String token = createToken();
             publishArtwork(new Artwork.Builder()
                     .title(photo.title)

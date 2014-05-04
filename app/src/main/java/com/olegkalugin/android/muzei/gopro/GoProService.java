@@ -1,4 +1,4 @@
-package com.olegkalugin.muzei.gopro;
+package com.olegkalugin.android.muzei.gopro;
 
 import android.net.Uri;
 
