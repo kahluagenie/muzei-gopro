@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Muzei GoPro POTD</string>
-    <string name="source_name">GoPro POTD</string>
-    <string name="source_description">GoPro Photo Of The Day</string>
+    <string name="source_name">GoPro Photo Of The Day</string>
+    <string name="source_description">Daily photos posted on GoPro\'s website</string>
     <string name="goprophoto_source_error_no_photo_to_share">No photo to share</string>
 </resources>

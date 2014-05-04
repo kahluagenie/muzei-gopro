@@ -2,8 +2,6 @@
     package="com.olegkalugin.muzei.gopro">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Required by RemoteMuzeiArtSource -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
@@ -16,7 +14,7 @@
             android:name=".GoProPotdArtSource"
             android:label="@string/source_name"
             android:description="@string/source_description"
-            android:icon="@drawable/ic_launcher">
+            android:icon="@drawable/ic_source_gopro">
             <intent-filter>
                 <action android:name="com.google.android.apps.muzei.api.MuzeiArtSource" />
             </intent-filter>
