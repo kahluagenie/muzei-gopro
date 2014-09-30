@@ -26,7 +26,7 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 
 public class GoProService {
-    public static final String WEBPAGE_URL = "http://gopro.com/photos/photo-of-the-day";
+    public static final String WEBPAGE_URL = "https://gopro.com/photos/photo-of-the-day/";
 
     public Photo getPhoto() {
         Document document;
@@ -48,6 +48,7 @@ public class GoProService {
     private Uri getPhotoUri(Document document) {
         Uri uri = null;
         Elements elements = document.select("div.span12.text-center.black-background");
+//        Elements elements = document.select("div.vid-wrap");
         if (!elements.isEmpty()) {
             Element div = elements.first();
             Element img = div.select("img").first();
@@ -59,12 +60,14 @@ public class GoProService {
     private String getPhotoTitle(Document document) {
         String title = document.title();
         title = title.replace("GoPro Photo Of The Day | ", "");
+//        title = title.replace("GoPro Channel | ", "");
         return title;
     }
 
     private String getPhotoByline(Document document) {
         String byline = "";
         Elements elements = document.select("p.gray-font.medium-bottom-margin");
+//        Elements elements = document.select("h6#video-author");
         if (!elements.isEmpty()) {
             Element p = elements.first();
             byline = p.text();
