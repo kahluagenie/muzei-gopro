@@ -57,7 +57,7 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
         }
 
         if (getCurrentArtwork() == null || !photo.title.equals(getCurrentArtwork().getTitle())) {
-            String token = createToken();
+            String token = goProService.getDateString();
             publishArtwork(new Artwork.Builder()
                     .title(photo.title)
                     .byline(photo.byline)
@@ -69,24 +69,6 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
         }
 
         scheduleUpdate(calculateNextUpdateTime());
-    }
-
-    /**
-     * Create a token as "year/month/day". MONTH is zero-based, so increase by 1.
-     * Use previous day if it's before 10 am PDT, since it's yesterday's photo.
-     * It will also serve us as a URL appender to access previous photos.
-     *
-     * @return token for the photo
-     */
-    private String createToken() {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
-        if (calendar.get(Calendar.HOUR_OF_DAY) < 10) {
-            calendar.add(Calendar.DAY_OF_MONTH, -1);
-        }
-
-        return calendar.get(Calendar.YEAR)
-                + "/" + String.valueOf(calendar.get(Calendar.MONTH) + 1)
-                + "/" + calendar.get(Calendar.DAY_OF_MONTH);
     }
 
     /**

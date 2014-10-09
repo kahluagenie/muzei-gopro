@@ -24,6 +24,8 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 public class GoProService {
     public static final String WEBPAGE_URL = "https://gopro.com/photos/photo-of-the-day/";
@@ -31,7 +33,8 @@ public class GoProService {
     public Photo getPhoto() {
         Document document;
         try {
-            document = Jsoup.connect(WEBPAGE_URL).get();
+            String url = WEBPAGE_URL + getDateString();
+            document = Jsoup.connect(url).get();
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -43,6 +46,24 @@ public class GoProService {
         photo.byline = getPhotoByline(document);
 
         return photo;
+    }
+
+    /**
+     * Create a token as "year/month/day". MONTH is zero-based, so increase by 1.
+     * Use previous day if it's before 10 am PDT, since it's yesterday's photo.
+     * It will also serve us as a URL appender to access previous photos.
+     *
+     * @return date for today's photo
+     */
+    public String getDateString() {
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
+        if (calendar.get(Calendar.HOUR_OF_DAY) < 10) {
+            calendar.add(Calendar.DAY_OF_MONTH, -1);
+        }
+
+        return calendar.get(Calendar.YEAR)
+                + "/" + String.valueOf(calendar.get(Calendar.MONTH) + 1)
+                + "/" + calendar.get(Calendar.DAY_OF_MONTH);
     }
 
     private Uri getPhotoUri(Document document) {
