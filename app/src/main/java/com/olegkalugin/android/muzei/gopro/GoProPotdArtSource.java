@@ -64,7 +64,7 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
                     .imageUri(photo.uri)
                     .token(token)
                     .viewIntent(new Intent(Intent.ACTION_VIEW,
-                            Uri.parse(GoProService.WEBPAGE_URL + "/" + token)))
+                            Uri.parse(GoProService.WEBPAGE_URL + token)))
                     .build());
         }
 
