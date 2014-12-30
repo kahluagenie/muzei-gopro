@@ -1,5 +1,6 @@
-GoPro Photo Of The Day for Muzei
-================================
+# GoPro Photo Of The Day for Muzei
+
+[![Build Status](https://travis-ci.org/kahluagenie/muzei-gopro.svg?branch=master)](https://travis-ci.org/kahluagenie/muzei-gopro)
 
 An extension for Roman Nurik's **[Muzei Live Wallpaper](https://github.com/romannurik/muzei)**
 
