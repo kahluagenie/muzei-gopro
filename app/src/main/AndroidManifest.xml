@@ -15,11 +15,11 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.olegkalugin.android.muzei.gopro">
+          package="com.olegkalugin.android.muzei.gopro">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <application
         android:allowBackup="true"
@@ -30,13 +30,14 @@
             android:name="com.olegkalugin.android.muzei.gopro.GoProPotdArtSource"
             android:label="@string/source_name"
             android:description="@string/source_description"
-            android:icon="@drawable/ic_source_gopro">
+            android:icon="@drawable/ic_source_gopro"
+            android:exported="false">
             <intent-filter>
-                <action android:name="com.google.android.apps.muzei.api.MuzeiArtSource" />
+                <action android:name="com.google.android.apps.muzei.api.MuzeiArtSource"/>
             </intent-filter>
             <meta-data
                 android:name="color"
-                android:value="#fa0" />
+                android:value="#fa0"/>
         </service>
 
     </application>
