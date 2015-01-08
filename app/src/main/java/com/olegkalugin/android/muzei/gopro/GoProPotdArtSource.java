@@ -31,7 +31,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 import retrofit.RestAdapter;
 
@@ -56,21 +55,20 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     @Override
     protected void onTryUpdate(int reason) throws RetryException {
         Date date = new Date();
-        Photo photo = getPhoto(date);
+        DateFormat potdDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String dateParam = potdDateFormat.format(date);
+        Photo photo = getPhoto(dateParam);
 
         if (photo == null || photo.uri == null) {
             throw new RetryException();
         }
 
         if (getCurrentArtwork() == null || !photo.title.equals(getCurrentArtwork().getTitle())) {
-            DateFormat goproDateFormat = new SimpleDateFormat("yyyy/MM/dd");
-            String token = goproDateFormat.format(date);
-
             publishArtwork(new Artwork.Builder()
                     .title(photo.title)
                     .byline(photo.byline)
-                    .imageUri(photo.uri)
-                    .token(token)
+                    .imageUri(Uri.parse(photo.uri))
+                    .token(dateParam)
                     .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(photo.source)))
                     .build());
         }
@@ -78,40 +76,32 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
         scheduleUpdate(calculateNextUpdateTime());
     }
 
-    private Photo getPhoto(Date date) {
+    private Photo getPhoto(String dateParam) {
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(POTD_URL)
                 .build();
-
-        DateFormat potdDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String dateParam = potdDateFormat.format(date);
 
         PotdService potdService = restAdapter.create(PotdService.class);
         return potdService.getPhoto(dateParam);
     }
 
     /**
-     * GoPro seems to update the photo at 10 am PDT every day.
-     * We'll schedule updates at 10:15 am and 10 pm just in case they delay it for some reason.
+     * Schedule updates for 12 am and 12 pm.
      *
      * @return next update time in milliseconds
      */
     private long calculateNextUpdateTime() {
-        // Do all date manipulations in PDT
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("America/Los_Angeles"));
+        Calendar calendar = Calendar.getInstance();
         int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 
-        if (hourOfDay >= 10 && hourOfDay < 22) {
-            calendar.set(Calendar.HOUR_OF_DAY, 22);
-            calendar.set(Calendar.MINUTE, 0);
+        if (hourOfDay < 12) {
+            calendar.set(Calendar.HOUR_OF_DAY, 12);
         } else {
-            if (hourOfDay >= 22) {
-                calendar.add(Calendar.DAY_OF_YEAR, 1);
-            }
-            calendar.set(Calendar.HOUR_OF_DAY, 10);
-            calendar.set(Calendar.MINUTE, 15);
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
         }
 
+        calendar.set(Calendar.MINUTE, 0);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar.getTimeInMillis();
@@ -153,7 +143,7 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     }
 
     public class Photo {
-        Uri uri;
+        String uri;
         String title;
         String byline;
         String source;
