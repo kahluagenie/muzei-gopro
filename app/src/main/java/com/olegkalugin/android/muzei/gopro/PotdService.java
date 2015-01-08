@@ -14,28 +14,12 @@
    limitations under the License.
  */
 
-apply plugin: 'com.android.application'
+package com.olegkalugin.android.muzei.gopro;
 
-android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+import retrofit.http.GET;
+import retrofit.http.Path;
 
-    defaultConfig {
-        minSdkVersion 17
-        targetSdkVersion 21
-        versionCode 4
-        versionName "1.0.3"
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
-        }
-    }
-}
-
-dependencies {
-    compile 'com.google.android.apps.muzei:muzei-api:+'
-    compile 'com.squareup.retrofit:retrofit:1.8.0'
+public interface PotdService {
+    @GET("/gopro/{date}")
+    GoProPotdArtSource.Photo getPhoto(@Path("date") String date);
 }

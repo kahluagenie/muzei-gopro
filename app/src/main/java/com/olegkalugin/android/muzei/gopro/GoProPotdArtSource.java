@@ -27,13 +27,19 @@ import com.google.android.apps.muzei.api.Artwork;
 import com.google.android.apps.muzei.api.RemoteMuzeiArtSource;
 import com.google.android.apps.muzei.api.UserCommand;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.TimeZone;
+
+import retrofit.RestAdapter;
 
 public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     private static final String TAG = "GoProPOTD";
     private static final String SOURCE_NAME = "GoProPotdArtSource";
     private static final int CUSTOM_COMMAND_ID_SHARE = 1;
+    private static final String POTD_URL = "http://potd.olegkalugin.com";
 
     public GoProPotdArtSource() {
         super(SOURCE_NAME);
@@ -49,26 +55,39 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
 
     @Override
     protected void onTryUpdate(int reason) throws RetryException {
-        GoProService goProService = new GoProService();
-        GoProService.Photo photo = goProService.getPhoto();
+        Date date = new Date();
+        Photo photo = getPhoto(date);
 
         if (photo == null || photo.uri == null) {
             throw new RetryException();
         }
 
         if (getCurrentArtwork() == null || !photo.title.equals(getCurrentArtwork().getTitle())) {
-            String token = goProService.getDateString();
+            DateFormat goproDateFormat = new SimpleDateFormat("yyyy/MM/dd");
+            String token = goproDateFormat.format(date);
+
             publishArtwork(new Artwork.Builder()
                     .title(photo.title)
                     .byline(photo.byline)
                     .imageUri(photo.uri)
                     .token(token)
-                    .viewIntent(new Intent(Intent.ACTION_VIEW,
-                            Uri.parse(GoProService.WEBPAGE_URL + token)))
+                    .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(photo.source)))
                     .build());
         }
 
         scheduleUpdate(calculateNextUpdateTime());
+    }
+
+    private Photo getPhoto(Date date) {
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint(POTD_URL)
+                .build();
+
+        DateFormat potdDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String dateParam = potdDateFormat.format(date);
+
+        PotdService potdService = restAdapter.create(PotdService.class);
+        return potdService.getPhoto(dateParam);
     }
 
     /**
@@ -131,5 +150,12 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
             startActivity(shareIntent);
 
         }
+    }
+
+    public class Photo {
+        Uri uri;
+        String title;
+        String byline;
+        String source;
     }
 }
