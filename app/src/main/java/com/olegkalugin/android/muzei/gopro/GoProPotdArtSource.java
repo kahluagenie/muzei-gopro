@@ -31,6 +31,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 import retrofit.RestAdapter;
 
@@ -55,7 +56,7 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     @Override
     protected void onTryUpdate(int reason) throws RetryException {
         Date date = new Date();
-        DateFormat potdDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat potdDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         String dateParam = potdDateFormat.format(date);
         Photo photo = getPhoto(dateParam);
 
