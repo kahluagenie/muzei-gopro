@@ -1,9 +1,9 @@
 language: android
 android:
   components:
-    - platform-tools-22
-    - tools-24.1.2
-    - build-tools-22
+    - platform-tools
+    - tools
+    - build-tools
     - android-22
 
 before_install:
