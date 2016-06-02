@@ -33,6 +33,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+
+    lintOptions {
+        lintConfig rootProject.file('gradle/lint.xml')
+    }
 }
 
 dependencies {
