@@ -33,13 +33,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import retrofit.RestAdapter;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     private static final String TAG = "GoProPOTD";
     private static final String SOURCE_NAME = "GoProPotdArtSource";
     private static final int CUSTOM_COMMAND_ID_SHARE = 1;
-    private static final String POTD_URL = "http://potd.olegkalugin.com";
+    private static final String POTD_URL = "https://potd.olegkalugin.com/";
 
     public GoProPotdArtSource() {
         super(SOURCE_NAME);
@@ -57,33 +61,44 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     protected void onTryUpdate(int reason) throws RetryException {
         Date date = new Date();
         DateFormat potdDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        String dateParam = potdDateFormat.format(date);
-        Photo photo = getPhoto(dateParam);
+        final String dateParam = potdDateFormat.format(date);
+        getPhoto(dateParam, new Callback<Photo>() {
+            @Override
+            public void onResponse(Call<Photo> call, Response<Photo> response) {
+                Photo photo = response.body();
+                if (photo == null || photo.uri == null) {
+                    throw new RetryException();
+                }
 
-        if (photo == null || photo.uri == null) {
-            throw new RetryException();
-        }
+                if (getCurrentArtwork() == null || !photo.title.equals(getCurrentArtwork().getTitle())) {
+                    publishArtwork(new Artwork.Builder()
+                            .title(photo.title)
+                            .byline(photo.byline)
+                            .imageUri(Uri.parse(photo.uri))
+                            .token(dateParam)
+                            .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(photo.source)))
+                            .build());
+                }
 
-        if (getCurrentArtwork() == null || !photo.title.equals(getCurrentArtwork().getTitle())) {
-            publishArtwork(new Artwork.Builder()
-                    .title(photo.title)
-                    .byline(photo.byline)
-                    .imageUri(Uri.parse(photo.uri))
-                    .token(dateParam)
-                    .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(photo.source)))
-                    .build());
-        }
+                scheduleUpdate(calculateNextUpdateTime());
+            }
 
-        scheduleUpdate(calculateNextUpdateTime());
+            @Override
+            public void onFailure(Call<Photo> call, Throwable t) {
+                throw new RetryException();
+            }
+        });
     }
 
-    private Photo getPhoto(String dateParam) {
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(POTD_URL)
+    private void getPhoto(String dateParam, Callback<Photo> callback) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(POTD_URL)
+                .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        PotdService potdService = restAdapter.create(PotdService.class);
-        return potdService.getPhoto(dateParam);
+        PotdService potdService = retrofit.create(PotdService.class);
+        Call<Photo> call = potdService.getPhoto(dateParam);
+        call.enqueue(callback);
     }
 
     /**

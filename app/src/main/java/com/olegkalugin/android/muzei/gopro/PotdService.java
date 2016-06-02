@@ -16,10 +16,11 @@
 
 package com.olegkalugin.android.muzei.gopro;
 
-import retrofit.http.GET;
-import retrofit.http.Path;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Path;
 
 public interface PotdService {
-    @GET("/gopro/{date}")
-    GoProPotdArtSource.Photo getPhoto(@Path("date") String date);
+    @GET("gopro/{date}")
+    Call<GoProPotdArtSource.Photo> getPhoto(@Path("date") String date);
 }
