@@ -27,6 +27,7 @@ import com.google.android.apps.muzei.api.Artwork;
 import com.google.android.apps.muzei.api.RemoteMuzeiArtSource;
 import com.google.android.apps.muzei.api.UserCommand;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -34,8 +35,6 @@ import java.util.Date;
 import java.util.Locale;
 
 import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -43,10 +42,17 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     private static final String TAG = "GoProPOTD";
     private static final String SOURCE_NAME = "GoProPotdArtSource";
     private static final int CUSTOM_COMMAND_ID_SHARE = 1;
-    private static final String POTD_URL = "https://potd.olegkalugin.com/";
+    private static final String POTD_URL = "http://potd.olegkalugin.com/";
+
+    private PotdService potdService;
 
     public GoProPotdArtSource() {
         super(SOURCE_NAME);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(POTD_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        potdService = retrofit.create(PotdService.class);
     }
 
     @Override
@@ -61,44 +67,35 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
     protected void onTryUpdate(int reason) throws RetryException {
         Date date = new Date();
         DateFormat potdDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-        final String dateParam = potdDateFormat.format(date);
-        getPhoto(dateParam, new Callback<Photo>() {
-            @Override
-            public void onResponse(Call<Photo> call, Response<Photo> response) {
-                Photo photo = response.body();
-                if (photo == null || photo.uri == null) {
-                    throw new RetryException();
-                }
+        String dateParam = potdDateFormat.format(date);
+        Photo photo = getPhoto(dateParam);
 
-                if (getCurrentArtwork() == null || !photo.title.equals(getCurrentArtwork().getTitle())) {
-                    publishArtwork(new Artwork.Builder()
-                            .title(photo.title)
-                            .byline(photo.byline)
-                            .imageUri(Uri.parse(photo.uri))
-                            .token(dateParam)
-                            .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(photo.source)))
-                            .build());
-                }
+        if (photo == null || photo.uri == null) {
+            throw new RetryException();
+        }
 
-                scheduleUpdate(calculateNextUpdateTime());
-            }
+        Artwork currentArtwork = getCurrentArtwork();
+        if (currentArtwork == null || !photo.title.equals(currentArtwork.getTitle())) {
+            publishArtwork(new Artwork.Builder()
+                    .title(photo.title)
+                    .byline(photo.byline)
+                    .imageUri(Uri.parse(photo.uri))
+                    .token(dateParam)
+                    .viewIntent(new Intent(Intent.ACTION_VIEW, Uri.parse(photo.source)))
+                    .build());
+        }
 
-            @Override
-            public void onFailure(Call<Photo> call, Throwable t) {
-                throw new RetryException();
-            }
-        });
+        scheduleUpdate(calculateNextUpdateTime());
     }
 
-    private void getPhoto(String dateParam, Callback<Photo> callback) {
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(POTD_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        PotdService potdService = retrofit.create(PotdService.class);
+    private Photo getPhoto(String dateParam) throws RetryException {
         Call<Photo> call = potdService.getPhoto(dateParam);
-        call.enqueue(callback);
+        try {
+            return call.execute().body();
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+            throw new RetryException();
+        }
     }
 
     /**
