@@ -3,8 +3,9 @@ android:
   components:
     - platform-tools
     - tools
-    - build-tools
+    - build-tools-23.0.3
     - android-23
+    - extra-android-m2repository
 
 before_install:
   - chmod +x gradlew
