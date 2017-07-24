@@ -5,8 +5,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // http://tools.android.com/tech-docs/new-build-system
-        classpath 'com.android.tools.build:gradle:2.1.2'
+        // https://developer.android.com/studio/releases/gradle-plugin.html
+        classpath 'com.android.tools.build:gradle:3.0.0-alpha7'
     }
 }
 

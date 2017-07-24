@@ -155,7 +155,7 @@ public class GoProPotdArtSource extends RemoteMuzeiArtSource {
         }
     }
 
-    public class Photo {
+    class Photo {
         String uri;
         String title;
         String byline;

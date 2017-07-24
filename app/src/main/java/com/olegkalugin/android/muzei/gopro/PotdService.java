@@ -20,7 +20,7 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
 
-public interface PotdService {
+interface PotdService {
     @GET("gopro/{date}")
     Call<GoProPotdArtSource.Photo> getPhoto(@Path("date") String date);
 }
